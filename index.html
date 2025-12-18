@@ -2,8 +2,8 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SleepTune - ISI 數位睡眠診斷</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>SleepTune - 智能自適應版</title>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;700&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -14,104 +14,127 @@
             --glass-border: rgba(255, 255, 255, 0.12);
         }
 
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        
+        /* 移除手機端的長按彈出菜單與藍色點擊框 */
+        * { 
+            box-sizing: border-box; 
+            -webkit-tap-highlight-color: transparent; 
+            -webkit-touch-callout: none;
+        }
+
         body {
             font-family: 'Noto Sans TC', sans-serif;
             background: var(--bg-dark);
             color: white;
             margin: 0;
+            padding: 0;
             display: flex;
             justify-content: center;
             align-items: center;
-            min-height: 100vh;
+            /* 使用 svh 確保在手機瀏覽器上完美全螢幕 */
+            min-height: 100svh; 
             overflow: hidden;
         }
 
-        /* 動態流體背景 */
+        /* 流動背景保持全螢幕 */
         .fluid-bg {
             position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
+            top: 0; left: 0; width: 100vw; height: 100svh;
             z-index: -1;
             background: linear-gradient(125deg, #070b14, #1e1b4b, #2e1065, #070b14);
             background-size: 400% 400%;
             animation: fluidMove 15s ease infinite;
         }
-        @keyframes fluidMove {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
 
         .app-container {
             position: relative;
-            width: 100%;
-            max-width: 414px;
-            height: 90vh;
+            width: 92%; /* 手機端兩側留白 */
+            max-width: 450px; /* 電腦端最大寬度 */
+            height: 85svh; /* 高度自適應 */
+            max-height: 800px;
             background: var(--glass);
             backdrop-filter: blur(30px);
             -webkit-backdrop-filter: blur(30px);
             border: 1px solid var(--glass-border);
-            border-radius: 40px;
-            padding: 30px;
+            border-radius: 35px;
+            padding: 25px;
+            display: flex;
+            flex-direction: column;
             box-shadow: 0 25px 50px rgba(0, 0, 0, 0.6);
-            overflow-y: auto;
-            scrollbar-width: none;
         }
-        .app-container::-webkit-scrollbar { display: none; }
+
+        /* 針對不同設備的調整 */
+        @media (max-height: 667px) { /* 針對 iPhone SE 等小螢幕 */
+            .app-container { height: 95svh; padding: 15px; }
+            h1 { font-size: 1.3rem; margin-bottom: 5px; }
+            .question-card { padding: 12px; margin-bottom: 10px; }
+            .visualizer { width: 100px; height: 100px; margin: 20px auto; }
+        }
 
         .page {
-            transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-            opacity: 1; transform: translateX(0);
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            transition: all 0.5s ease;
+            overflow-y: auto; /* 問卷內容過長時可滾動 */
+            scrollbar-width: none;
+            padding-bottom: 20px;
         }
-        .page.hidden { opacity: 0; transform: translateX(30px); display: none; }
-        .page.exit { opacity: 0; transform: translateX(-30px); }
+        .page::-webkit-scrollbar { display: none; }
 
-        h1 { font-size: 1.6rem; text-align: center; color: var(--primary); margin-bottom: 5px; }
-        .subtitle { text-align: center; font-size: 0.8rem; color: #94a3b8; margin-bottom: 25px; }
+        .page.hidden { display: none; opacity: 0; transform: scale(0.95); }
 
-        /* ISI 問卷樣式 */
+        header { flex-shrink: 0; text-align: center; margin-bottom: 20px; }
+        h1 { font-size: 1.6rem; color: var(--primary); margin: 0; }
+        .subtitle { font-size: 0.8rem; color: #94a3b8; margin-top: 5px; }
+
+        /* ISI 問卷組件 */
         .question-card {
             background: rgba(255,255,255,0.05);
-            padding: 20px;
-            border-radius: 20px;
-            margin-bottom: 20px;
+            padding: 18px;
+            border-radius: 22px;
+            margin-bottom: 15px;
+            flex-shrink: 0;
         }
-        .question-text { font-size: 0.95rem; margin-bottom: 15px; display: block; }
-        .score-options { display: flex; justify-content: space-between; gap: 5px; }
+        .question-text { font-size: 0.9rem; margin-bottom: 12px; display: block; line-height: 1.4; }
+        .score-options { display: flex; justify-content: space-between; gap: 6px; }
         .score-btn {
-            flex: 1; background: rgba(255,255,255,0.1); border: none; color: white;
-            padding: 10px 0; border-radius: 10px; cursor: pointer; transition: 0.2s;
-            font-size: 0.8rem;
+            flex: 1; background: rgba(255,255,255,0.08); border: none; color: white;
+            padding: 10px 0; border-radius: 12px; cursor: pointer; font-size: 0.75rem;
         }
-        .score-btn.active { background: var(--primary); font-weight: bold; }
+        .score-btn.active { background: var(--primary); font-weight: bold; transform: scale(1.05); }
 
+        .footer-action { flex-shrink: 0; margin-top: auto; padding-top: 10px; }
         .action-btn {
             width: 100%; background: white; color: var(--bg-dark); border: none;
-            padding: 15px; border-radius: 20px; font-weight: bold; font-size: 1rem;
-            cursor: pointer; margin-top: 10px; box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+            padding: 16px; border-radius: 20px; font-weight: bold; font-size: 1rem;
+            cursor: pointer; box-shadow: 0 10px 20px rgba(0,0,0,0.2);
         }
 
         /* 播放器介面 */
-        #player-page { text-align: center; }
+        #player-page { text-align: center; justify-content: center; }
         .visualizer {
-            width: 150px; height: 150px; background: linear-gradient(45deg, var(--primary), var(--secondary));
-            border-radius: 50%; margin: 40px auto; position: relative;
-            display: flex; justify-content: center; align-items: center;
+            width: 140px; height: 140px; background: linear-gradient(45deg, var(--primary), var(--secondary));
+            border-radius: 50%; margin: 30px auto; position: relative;
+            display: flex; justify-content: center; align-items: center; flex-shrink: 0;
         }
         .pulse {
             position: absolute; width: 100%; height: 100%; border-radius: 50%;
             background: var(--primary); animation: pulse-anim 3s infinite; opacity: 0;
         }
-        @keyframes pulse-anim {
-            0% { transform: scale(1); opacity: 0.5; }
-            100% { transform: scale(1.8); opacity: 0; }
-        }
 
         .result-badge {
-            background: rgba(129, 140, 248, 0.2); color: var(--primary);
-            padding: 5px 15px; border-radius: 20px; font-size: 0.75rem; font-weight: bold;
+            display: inline-block; background: rgba(129, 140, 248, 0.2); color: var(--primary);
+            padding: 4px 12px; border-radius: 15px; font-size: 0.7rem; font-weight: bold;
+            margin-bottom: 10px;
         }
+
+        .mechanism-box {
+            background: rgba(0,0,0,0.25); padding: 15px; border-radius: 20px;
+            text-align: left; margin-top: 20px; font-size: 0.8rem; line-height: 1.5; color: #cbd5e1;
+        }
+
+        @keyframes fluidMove { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+        @keyframes pulse-anim { 0% { transform: scale(1); opacity: 0.5; } 100% { transform: scale(1.8); opacity: 0; } }
     </style>
 </head>
 <body>
@@ -120,8 +143,10 @@
 
 <div class="app-container">
     <div id="survey-page" class="page">
-        <h1>SleepTune</h1>
-        <p class="subtitle">專業 ISI 睡眠嚴重度評估</p>
+        <header>
+            <h1>SleepTune</h1>
+            <div class="subtitle">基於 ISI 標準的睡眠診斷</div>
+        </header>
         
         <div class="question-card" data-q="q1">
             <span class="question-text">1. 您「入睡」的困難程度？</span>
@@ -146,38 +171,42 @@
         </div>
 
         <div class="question-card" data-q="q3">
-            <span class="question-text">3. 您對目前睡眠品質的滿意度？</span>
+            <span class="question-text">3. 睡眠問題對日常生活的干擾？</span>
             <div class="score-options">
-                <button class="score-btn" onclick="setScore(this, 0)">滿意</button>
-                <button class="score-btn" onclick="setScore(this, 1)">還好</button>
-                <button class="score-btn" onclick="setScore(this, 2)">不滿意</button>
-                <button class="score-btn" onclick="setScore(this, 3)">很難過</button>
-                <button class="score-btn" onclick="setScore(this, 4)">極痛苦</button>
+                <button class="score-btn" onclick="setScore(this, 0)">無</button>
+                <button class="score-btn" onclick="setScore(this, 1)">輕微</button>
+                <button class="score-btn" onclick="setScore(this, 2)">中度</button>
+                <button class="score-btn" onclick="setScore(this, 3)">明顯</button>
+                <button class="score-btn" onclick="setScore(this, 4)">極大</button>
             </div>
         </div>
 
-        <button class="action-btn" onclick="analyzeSleep()">生成睡眠處方</button>
+        <div class="footer-action">
+            <button class="action-btn" onclick="analyzeSleep()">生成睡眠處方</button>
+        </div>
     </div>
 
     <div id="player-page" class="page hidden">
-        <span class="result-badge" id="clinical-status"></span>
-        <h2 id="sound-title" style="margin: 15px 0 5px 0;"></h2>
-        <p id="isi-info" style="font-size: 0.8rem; color: #94a3b8; margin-top: 0;"></p>
+        <div class="result-badge" id="clinical-status"></div>
+        <h2 id="sound-title" style="margin: 5px 0;"></h2>
+        <p id="isi-info" style="font-size: 0.75rem; color: #94a3b8; margin: 0;"></p>
 
         <div class="visualizer">
             <div class="pulse"></div>
             <div class="pulse" style="animation-delay: 1.5s;"></div>
-            <svg width="40" height="40" viewBox="0 0 24 24" fill="white"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
+            <svg width="35" height="35" viewBox="0 0 24 24" fill="white"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
         </div>
 
         <button class="action-btn" id="play-pause" onclick="toggleAudio()">暫停播放</button>
 
-        <div class="question-card" style="text-align: left; margin-top: 30px;">
-            <strong style="color: var(--primary); font-size: 0.85rem;">✦ 科學建議與機制</strong>
-            <p id="mechanism-desc" style="font-size: 0.8rem; line-height: 1.6; color: #cbd5e1; margin-top: 10px;"></p>
+        <div class="mechanism-box">
+            <strong style="color: var(--primary); font-size: 0.8rem;">✦ 科學建議</strong>
+            <p id="mechanism-desc" style="margin-top: 8px;"></p>
         </div>
 
-        <p onclick="location.reload()" style="color: #94a3b8; font-size: 0.8rem; cursor: pointer; margin-top: 20px;">重新進行評估</p>
+        <div class="footer-action">
+            <p onclick="location.reload()" style="color: #94a3b8; font-size: 0.75rem; cursor: pointer; text-align: center;">重新評估狀況</p>
+        </div>
     </div>
 </div>
 
@@ -196,78 +225,58 @@
 
     function analyzeSleep() {
         if (userScores.q1 === null || userScores.q2 === null || userScores.q3 === null) {
-            alert("請完成所有評估項");
-            return;
+            alert("請完成評估以獲取處方"); return;
         }
 
         const totalISI = userScores.q1 + userScores.q2 + userScores.q3;
         const surveyPage = document.getElementById('survey-page');
         const playerPage = document.getElementById('player-page');
 
-        surveyPage.classList.add('exit');
+        surveyPage.style.opacity = '0';
+        surveyPage.style.transform = 'scale(0.9)';
         
         setTimeout(() => {
-            surveyPage.style.display = 'none';
-            playerPage.style.display = 'block';
+            surveyPage.classList.add('hidden');
+            playerPage.classList.remove('hidden');
+            // 強制重繪觸發動畫
+            void playerPage.offsetWidth;
+            playerPage.style.opacity = '1';
+            playerPage.style.transform = 'scale(1)';
             
             let config = {};
-            
             if (totalISI < 8) {
                 config = {
-                    status: "無臨床顯著失眠 (Score: " + totalISI + ")",
-                    title: "放鬆輕音樂",
-                    mech: "您的睡眠狀況良好。此音軌旨在幫助身心一般性放鬆，維持優質睡眠衛生。",
+                    status: "無臨床顯著失眠 (ISI: " + totalISI + ")",
+                    title: "放鬆引導音",
+                    mech: "目前的睡眠狀況良好。建議播放一般放鬆音軌，幫助緩解日間疲勞，維持穩定的入睡節律。",
                     url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"
                 };
             } else {
-                if (userScores.q1 > userScores.q2) {
-                    config = {
-                        status: "目標介入群體: 入睡困難型",
-                        title: "白噪音 (White Noise)",
-                        mech: "針對入睡困難 (SOL較長)。透過能量均勻分佈遮蔽環境突發噪音，降低高喚醒狀態，協助進入睡眠。",
-                        url: "https://downsc.chinaz.net/Files/DownLoad/sound1/202211/y1349.mp3"
-                    };
-                } else if (userScores.q2 > userScores.q1) {
-                    config = {
-                        status: "目標介入群體: 維持困難型",
-                        title: "粉紅噪音 (Pink Noise)",
-                        mech: "針對睡眠維持困難。實驗證實能增強深度睡眠慢波，穩定睡眠結構並減少夜間醒來次數。",
-                        url: "https://www.audiocheck.net/download.php?filename=Audio/audiocheck.net_pinknoise.wav"
-                    };
-                } else {
-                    config = {
-                        status: "目標介入群體: 混合型",
-                        title: "粉紅噪音 + Delta 節拍",
-                        mech: "針對混合型失眠。利用雙耳節拍 (Delta 1-4Hz) 主動誘導放鬆，並結合粉紅噪音穩定睡眠階段。",
-                        url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3"
-                    };
-                }
+                const isOnset = userScores.q1 > userScores.q2;
+                config = {
+                    status: isOnset ? "亞臨床/臨床失眠 (入睡型)" : "亞臨床/臨床失眠 (維持型)",
+                    title: isOnset ? "白噪音 (White Noise)" : "粉紅噪音 (Pink Noise)",
+                    mech: isOnset ? "白噪音能量分布平均，能阻隔外界環境噪音（Noise Masking），降低大腦對環境的敏感度。" : "粉紅噪音能同步腦波慢波活動（Slow Wave Activity），有效延長深層睡眠時間，減少半夜醒來。",
+                    url: isOnset ? "https://downsc.chinaz.net/Files/DownLoad/sound1/202211/y1349.mp3" : "https://www.audiocheck.net/download.php?filename=Audio/audiocheck.net_pinknoise.wav"
+                };
             }
 
             document.getElementById('clinical-status').innerText = config.status;
             document.getElementById('sound-title').innerText = config.title;
             document.getElementById('mechanism-desc').innerText = config.mech;
-            document.getElementById('isi-info').innerText = "ISI 總分: " + totalISI + " 分";
+            document.getElementById('isi-info').innerText = "總得分: " + totalISI + " (指標: ISI)";
             
             const audio = document.getElementById('main-audio');
             audio.src = config.url;
             audio.play();
-
-            void playerPage.offsetWidth;
-            playerPage.classList.remove('hidden');
-        }, 600);
+        }, 500);
     }
 
     function toggleAudio() {
         const audio = document.getElementById('main-audio');
         const btn = document.getElementById('play-pause');
-        if (audio.paused) {
-            audio.play();
-            btn.innerText = "暫停播放";
-        } else {
-            audio.pause();
-            btn.innerText = "繼續播放";
-        }
+        if (audio.paused) { audio.play(); btn.innerText = "暫停播放"; }
+        else { audio.pause(); btn.innerText = "繼續播放"; }
     }
 </script>
 
