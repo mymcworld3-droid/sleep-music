@@ -2,153 +2,263 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SleepTune - 您的專屬睡眠聲音處方</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>SleepTune - 無縫循環播放版</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-color: #0f172a;
-            --card-bg: #1e293b;
-            --accent: #818cf8;
-            --text-main: #f1f5f9;
-            --text-dim: #94a3b8;
+            --primary: #818cf8;
+            --secondary: #c084fc;
+            --bg-dark: #070b14;
+            --glass: rgba(255, 255, 255, 0.08);
+            --glass-border: rgba(255, 255, 255, 0.12);
         }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
-            color: var(--text-main);
+            font-family: 'Noto Sans TC', sans-serif;
+            background: radial-gradient(circle at top right, #1e1b4b, #070b14);
+            color: white;
+            margin: 0;
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            margin: 0;
-            padding: 20px;
+            overflow: hidden;
         }
-        .container {
-            background-color: var(--card-bg);
-            padding: 2rem;
-            border-radius: 20px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            max-width: 500px;
-            width: 100%;
-            text-align: center;
-        }
-        h1 { font-size: 1.5rem; margin-bottom: 1.5rem; color: var(--accent); }
-        .description { color: var(--text-dim); font-size: 0.9rem; margin-bottom: 2rem; }
-        
-        .option-card {
-            background: #334155;
-            padding: 1rem;
-            margin-bottom: 1rem;
-            border-radius: 12px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            border: 2px solid transparent;
-            text-align: left;
-        }
-        .option-card:hover { background: #475569; }
-        .option-card.active { border-color: var(--accent); background: #312e81; }
-        .option-title { font-weight: bold; display: block; margin-bottom: 4px; }
-        .option-sub { font-size: 0.8rem; color: var(--text-dim); }
 
+        .app-container {
+            position: relative;
+            width: 100%;
+            max-width: 414px;
+            height: 85vh;
+            background: var(--glass);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid var(--glass-border);
+            border-radius: 40px;
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.6);
+        }
+
+        header { text-align: center; margin-bottom: 30px; }
+        h1 { font-size: 1.6rem; margin: 0; letter-spacing: 1px; color: var(--primary); }
+        .sub-t { color: #94a3b8; font-size: 0.8rem; margin-top: 5px; }
+
+        /* 卡片設計 */
+        .card {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--glass-border);
+            padding: 22px;
+            border-radius: 24px;
+            margin-bottom: 15px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .card:hover { background: rgba(255, 255, 255, 0.08); transform: translateY(-2px); }
+        .card-title { font-weight: bold; font-size: 1.1rem; display: block; margin-bottom: 5px; }
+        .card-desc { font-size: 0.85rem; color: #94a3b8; line-height: 1.4; }
+
+        /* 播放頁面 */
         #result-area {
-            margin-top: 2rem;
-            padding-top: 2rem;
-            border-top: 1px solid #475569;
             display: none;
+            flex-direction: column;
+            align-items: center;
+            height: 100%;
         }
-        .recommendation-box {
-            background: rgba(129, 140, 248, 0.1);
-            padding: 1rem;
-            border-radius: 10px;
-            margin-bottom: 1.5rem;
+
+        /* 呼吸動畫控制 */
+        .player-visual {
+            width: 160px;
+            height: 160px;
+            background: linear-gradient(45deg, var(--primary), var(--secondary));
+            border-radius: 50%;
+            margin: 30px 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            box-shadow: 0 0 40px rgba(129, 140, 248, 0.4);
         }
-        audio { width: 100%; margin-top: 10px; border-radius: 8px; }
-        .mechanism { font-size: 0.85rem; color: var(--text-dim); line-height: 1.5; text-align: left; margin-top: 10px;}
+
+        .pulse {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: var(--primary);
+            opacity: 0;
+        }
+
+        /* 播放時才啟動動畫 */
+        .playing .pulse {
+            animation: pulse-ring 2.5s infinite;
+        }
+
+        @keyframes pulse-ring {
+            0% { transform: scale(1); opacity: 0.4; }
+            100% { transform: scale(1.6); opacity: 0; }
+        }
+
+        /* 隱藏原生控制項，使用自定義按鈕 */
+        .play-controls {
+            margin-top: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .main-btn {
+            background: white;
+            color: var(--bg-dark);
+            border: none;
+            padding: 15px 40px;
+            border-radius: 30px;
+            font-weight: bold;
+            font-size: 1rem;
+            cursor: pointer;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+        }
+
+        .loop-status {
+            font-size: 0.75rem;
+            color: var(--primary);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-weight: bold;
+        }
+
+        .mechanism-box {
+            background: rgba(0,0,0,0.3);
+            padding: 15px;
+            border-radius: 20px;
+            margin-top: 25px;
+            font-size: 0.85rem;
+            line-height: 1.5;
+            color: #cbd5e1;
+        }
+
+        .back-link {
+            margin-top: auto;
+            color: #94a3b8;
+            font-size: 0.85rem;
+            text-decoration: none;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h1>🌙 SleepTune 睡眠診斷</h1>
-    <p class="description">根據您的 ISI 睡眠狀況，選擇最符合的描述：</p>
+<div class="app-container">
+    <header id="app-header">
+        <h1>SleepTune</h1>
+        <div class="sub-t">ISI 睡眠研究支持</div>
+    </header>
 
-    <div id="options">
-        <div class="option-card" onclick="selectType('onset')">
-            <span class="option-title">入睡困難 (SOL 較長)</span>
-            <span class="option-sub">躺在床上很久都睡不著，環境噪音干擾明顯。</span>
+    <div id="selection-page">
+        <div class="card" onclick="selectType('onset')">
+            <span class="card-title">🌙 難以入睡</span>
+            <span class="card-desc">環境太吵或大腦太興奮。推薦：白噪音。</span>
         </div>
-        <div class="option-card" onclick="selectType('maintenance')">
-            <span class="option-title">維持困難 (夜間易醒)</span>
-            <span class="option-sub">容易半醒或淺眠，醒來後難以再次入睡。</span>
+        <div class="card" onclick="selectType('maintenance')">
+            <span class="card-title">⏳ 睡眠淺短</span>
+            <span class="card-desc">半夜容易醒來。推薦：粉紅噪音。</span>
         </div>
-        <div class="option-card" onclick="selectType('mixed')">
-            <span class="option-title">混合型 / 高喚醒狀態</span>
-            <span class="option-sub">既難入睡也容易醒，壓力大導致腦袋停不下來。</span>
+        <div class="card" onclick="selectType('🧠 壓力過大')">
+            <span class="card-title">🧠 壓力型失眠</span>
+            <span class="card-desc">身心難以放鬆。推薦：Delta 雙耳節拍。</span>
         </div>
     </div>
 
     <div id="result-area">
-        <h3>為您推薦：<span id="sound-name" style="color: var(--accent);"></span></h3>
-        <div class="recommendation-box">
-            <p id="sound-desc" style="font-size: 0.9rem;"></p>
-            <audio id="audio-player" controls loop>
-                <source id="audio-source" src="" type="audio/mpeg">
-                您的瀏覽器不支持音訊播放。
-            </audio>
+        <div class="loop-status">∞ 正在重複播放</div>
+        <h2 id="sound-name" style="margin: 10px 0 0 0;"></h2>
+        
+        <div id="visual-container" class="player-visual">
+            <div class="pulse"></div>
+            <div class="pulse" style="animation-delay: 1.2s;"></div>
+            <svg id="play-icon" width="50" height="50" viewBox="0 0 24 24" fill="white">
+                <path d="M8 5v14l11-7z"/>
+            </svg>
         </div>
-        <div class="mechanism">
-            <strong>科學機制：</strong><br>
+
+        <div class="play-controls">
+            <button class="main-btn" id="toggle-btn" onclick="togglePlay()">暫停播放</button>
+        </div>
+
+        <div class="mechanism-box">
             <span id="mechanism-text"></span>
         </div>
-        <button onclick="reset()" style="margin-top: 20px; background: none; border: none; color: var(--accent); cursor: pointer;">重新選擇</button>
+
+        <audio id="audio-player" loop pre-load="auto">
+            <source id="audio-source" src="" type="audio/mpeg">
+        </audio>
+
+        <p class="back-link" onclick="reset()">重新評估狀況</p>
     </div>
 </div>
 
 <script>
     const data = {
         onset: {
-            name: "白噪音 (White Noise)",
-            desc: "建立穩定的背景音牆，阻隔突發噪音。",
-            mechanism: "白噪音能量均勻分佈，能有效遮蔽環境突發噪音，降低大腦的高喚醒狀態，協助縮短入睡潛伏期 (SOL)。",
-            // 替換為實際的白噪音音檔連結
+            name: "白噪音",
+            mechanism: "透過穩定音牆遮蔽突發環境音，縮短入睡潛伏期 (SOL)。",
             url: "https://downsc.chinaz.net/Files/DownLoad/sound1/202211/y1349.mp3" 
         },
         maintenance: {
-            name: "粉紅噪音 (Pink Noise)",
-            desc: "調節腦波，加深深度睡眠。",
-            mechanism: "核心作用是增強 N3 深度睡眠階段的慢波活動 (Slow Wave Activity)，穩定睡眠結構，減少半夜醒來的次數。",
+            name: "粉紅噪音",
+            mechanism: "增強深度睡眠的慢波活動，減少夜間覺醒次數。",
             url: "https://www.audiocheck.net/download.php?filename=Audio/audiocheck.net_pinknoise.wav"
         },
         mixed: {
-            name: "粉紅噪音 + 雙耳節拍 (BB)",
-            desc: "多重干預，引導大腦進入 Delta 波段。",
-            mechanism: "PN 用於穩定睡眠，雙耳節拍（$1$–$4$ Hz Delta 波）作為積極介入，旨在誘發放鬆感並顯著增加 N3 深度睡眠持續時間。",
-            url: "https://cs1.mp3.pm/download/196543240/MllLTUo5WGptUVcxdG1EZnFVMk5waGNYWHFwczJibVJ3cEppMFV2SWVxbHRGY3grdVN1NmdnanlJUC9pUFY2aUFjNXJzQ09kN1o5L0VaSFV3cUNORTdRRjlod29rYjJvQ1dYVDY5ZzRTdFZLdDExU0c1cTV1RHUvcUpwWVRIQ1I/Pink_Noise_Binaural_Beats_Deep_Sleep_-_Sleep_Tonic_(mp3.pm).mp3"
+            name: "Delta 雙耳節拍",
+            mechanism: "引導大腦進入 $1$–$4$ Hz 的深度修復頻率，適合高度焦慮者。",
+            url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3"
         }
     };
 
+    const player = document.getElementById('audio-player');
+    const visual = document.getElementById('visual-container');
+    const toggleBtn = document.getElementById('toggle-btn');
+
     function selectType(type) {
-        // UI 切換
-        document.getElementById('options').style.display = 'none';
-        document.getElementById('result-area').style.display = 'block';
-        
-        // 更新內容
-        const info = data[type];
+        const info = data[type] || data['mixed'];
+        document.getElementById('selection-page').style.display = 'none';
+        document.getElementById('result-area').style.display = 'flex';
         document.getElementById('sound-name').innerText = info.name;
-        document.getElementById('sound-desc').innerText = info.desc;
-        document.getElementById('mechanism-text').innerText = info.mechanism;
+        document.getElementById('mechanism-text').innerText = "💡 " + info.mechanism;
         
-        // 更新音軌
-        const player = document.getElementById('audio-player');
-        const source = document.getElementById('audio-source');
-        source.src = info.url;
-        player.load(); // 重新加載音源
+        document.getElementById('audio-source').src = info.url;
+        player.load();
+        
+        // 確保循環播放
+        player.loop = true;
+        
+        player.play().then(() => {
+            visual.classList.add('playing');
+        }).catch(e => {
+            toggleBtn.innerText = "點擊播放";
+            visual.classList.remove('playing');
+        });
+    }
+
+    function togglePlay() {
+        if (player.paused) {
+            player.play();
+            toggleBtn.innerText = "暫停播放";
+            visual.classList.add('playing');
+        } else {
+            player.pause();
+            toggleBtn.innerText = "繼續播放";
+            visual.classList.remove('playing');
+        }
     }
 
     function reset() {
-        document.getElementById('options').style.display = 'block';
-        document.getElementById('result-area').style.display = 'none';
-        document.getElementById('audio-player').pause();
+        location.reload(); // 最簡單的重置方式
     }
 </script>
 
