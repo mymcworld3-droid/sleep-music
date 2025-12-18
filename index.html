@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SleepTune - 您的專屬睡眠聲音處方</title>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --accent: #818cf8;
+            --text-main: #f1f5f9;
+            --text-dim: #94a3b8;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+            color: var(--text-main);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            background-color: var(--card-bg);
+            padding: 2rem;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+        }
+        h1 { font-size: 1.5rem; margin-bottom: 1.5rem; color: var(--accent); }
+        .description { color: var(--text-dim); font-size: 0.9rem; margin-bottom: 2rem; }
+        
+        .option-card {
+            background: #334155;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+            text-align: left;
+        }
+        .option-card:hover { background: #475569; }
+        .option-card.active { border-color: var(--accent); background: #312e81; }
+        .option-title { font-weight: bold; display: block; margin-bottom: 4px; }
+        .option-sub { font-size: 0.8rem; color: var(--text-dim); }
+
+        #result-area {
+            margin-top: 2rem;
+            padding-top: 2rem;
+            border-top: 1px solid #475569;
+            display: none;
+        }
+        .recommendation-box {
+            background: rgba(129, 140, 248, 0.1);
+            padding: 1rem;
+            border-radius: 10px;
+            margin-bottom: 1.5rem;
+        }
+        audio { width: 100%; margin-top: 10px; border-radius: 8px; }
+        .mechanism { font-size: 0.85rem; color: var(--text-dim); line-height: 1.5; text-align: left; margin-top: 10px;}
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>🌙 SleepTune 睡眠診斷</h1>
+    <p class="description">根據您的 ISI 睡眠狀況，選擇最符合的描述：</p>
+
+    <div id="options">
+        <div class="option-card" onclick="selectType('onset')">
+            <span class="option-title">入睡困難 (SOL 較長)</span>
+            <span class="option-sub">躺在床上很久都睡不著，環境噪音干擾明顯。</span>
+        </div>
+        <div class="option-card" onclick="selectType('maintenance')">
+            <span class="option-title">維持困難 (夜間易醒)</span>
+            <span class="option-sub">容易半醒或淺眠，醒來後難以再次入睡。</span>
+        </div>
+        <div class="option-card" onclick="selectType('mixed')">
+            <span class="option-title">混合型 / 高喚醒狀態</span>
+            <span class="option-sub">既難入睡也容易醒，壓力大導致腦袋停不下來。</span>
+        </div>
+    </div>
+
+    <div id="result-area">
+        <h3>為您推薦：<span id="sound-name" style="color: var(--accent);"></span></h3>
+        <div class="recommendation-box">
+            <p id="sound-desc" style="font-size: 0.9rem;"></p>
+            <audio id="audio-player" controls loop>
+                <source id="audio-source" src="" type="audio/mpeg">
+                您的瀏覽器不支持音訊播放。
+            </audio>
+        </div>
+        <div class="mechanism">
+            <strong>科學機制：</strong><br>
+            <span id="mechanism-text"></span>
+        </div>
+        <button onclick="reset()" style="margin-top: 20px; background: none; border: none; color: var(--accent); cursor: pointer;">重新選擇</button>
+    </div>
+</div>
+
+<script>
+    const data = {
+        onset: {
+            name: "白噪音 (White Noise)",
+            desc: "建立穩定的背景音牆，阻隔突發噪音。",
+            mechanism: "白噪音能量均勻分佈，能有效遮蔽環境突發噪音，降低大腦的高喚醒狀態，協助縮短入睡潛伏期 (SOL)。",
+            // 替換為實際的白噪音音檔連結
+            url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" 
+        },
+        maintenance: {
+            name: "粉紅噪音 (Pink Noise)",
+            desc: "調節腦波，加深深度睡眠。",
+            mechanism: "核心作用是增強 N3 深度睡眠階段的慢波活動 (Slow Wave Activity)，穩定睡眠結構，減少半夜醒來的次數。",
+            url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3"
+        },
+        mixed: {
+            name: "粉紅噪音 + 雙耳節拍 (BB)",
+            desc: "多重干預，引導大腦進入 Delta 波段。",
+            mechanism: "PN 用於穩定睡眠，雙耳節拍（$1$–$4$ Hz Delta 波）作為積極介入，旨在誘發放鬆感並顯著增加 N3 深度睡眠持續時間。",
+            url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3"
+        }
+    };
+
+    function selectType(type) {
+        // UI 切換
+        document.getElementById('options').style.display = 'none';
+        document.getElementById('result-area').style.display = 'block';
+        
+        // 更新內容
+        const info = data[type];
+        document.getElementById('sound-name').innerText = info.name;
+        document.getElementById('sound-desc').innerText = info.desc;
+        document.getElementById('mechanism-text').innerText = info.mechanism;
+        
+        // 更新音軌
+        const player = document.getElementById('audio-player');
+        const source = document.getElementById('audio-source');
+        source.src = info.url;
+        player.load(); // 重新加載音源
+    }
+
+    function reset() {
+        document.getElementById('options').style.display = 'block';
+        document.getElementById('result-area').style.display = 'none';
+        document.getElementById('audio-player').pause();
+    }
+</script>
+
+</body>
+</html>
