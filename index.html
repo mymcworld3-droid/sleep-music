@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SleepTune - 無縫循環播放版</title>
+    <title>SleepTune - 流暢轉場版</title>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;700&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -12,9 +12,11 @@
             --bg-dark: #070b14;
             --glass: rgba(255, 255, 255, 0.08);
             --glass-border: rgba(255, 255, 255, 0.12);
+            --transition-speed: 0.5s;
         }
 
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        
         body {
             font-family: 'Noto Sans TC', sans-serif;
             background: radial-gradient(circle at top right, #1e1b4b, #070b14);
@@ -41,13 +43,41 @@
             display: flex;
             flex-direction: column;
             box-shadow: 0 25px 50px rgba(0, 0, 0, 0.6);
+            overflow: hidden; /* 確保內容轉場不溢出圓角 */
+        }
+
+        /* 轉場核心 CSS */
+        .page {
+            position: absolute;
+            top: 30px;
+            left: 30px;
+            right: 30px;
+            bottom: 30px;
+            transition: all var(--transition-speed) cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            flex-direction: column;
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* 隱藏狀態：往下掉並變透明 */
+        .page.hidden {
+            opacity: 0;
+            transform: translateY(20px);
+            pointer-events: none;
+        }
+
+        /* 離開狀態：往上升並變透明 */
+        .page.exit {
+            opacity: 0;
+            transform: translateY(-20px);
+            pointer-events: none;
         }
 
         header { text-align: center; margin-bottom: 30px; }
         h1 { font-size: 1.6rem; margin: 0; letter-spacing: 1px; color: var(--primary); }
         .sub-t { color: #94a3b8; font-size: 0.8rem; margin-top: 5px; }
 
-        /* 卡片設計 */
         .card {
             background: rgba(255, 255, 255, 0.04);
             border: 1px solid var(--glass-border);
@@ -57,30 +87,22 @@
             cursor: pointer;
             transition: 0.3s;
         }
-        .card:hover { background: rgba(255, 255, 255, 0.08); transform: translateY(-2px); }
+        .card:active { transform: scale(0.95); background: rgba(255, 255, 255, 0.1); }
         .card-title { font-weight: bold; font-size: 1.1rem; display: block; margin-bottom: 5px; }
         .card-desc { font-size: 0.85rem; color: #94a3b8; line-height: 1.4; }
 
-        /* 播放頁面 */
-        #result-area {
-            display: none;
-            flex-direction: column;
-            align-items: center;
-            height: 100%;
-        }
+        #result-area { align-items: center; text-align: center; }
 
-        /* 呼吸動畫控制 */
         .player-visual {
-            width: 160px;
-            height: 160px;
+            width: 140px;
+            height: 140px;
             background: linear-gradient(45deg, var(--primary), var(--secondary));
             border-radius: 50%;
-            margin: 30px 0;
+            margin: 20px 0;
             display: flex;
             justify-content: center;
             align-items: center;
             position: relative;
-            box-shadow: 0 0 40px rgba(129, 140, 248, 0.4);
         }
 
         .pulse {
@@ -92,175 +114,150 @@
             opacity: 0;
         }
 
-        /* 播放時才啟動動畫 */
-        .playing .pulse {
-            animation: pulse-ring 2.5s infinite;
-        }
+        .playing .pulse { animation: pulse-ring 3s infinite; }
 
         @keyframes pulse-ring {
             0% { transform: scale(1); opacity: 0.4; }
-            100% { transform: scale(1.6); opacity: 0; }
-        }
-
-        /* 隱藏原生控制項，使用自定義按鈕 */
-        .play-controls {
-            margin-top: 10px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 15px;
+            100% { transform: scale(1.8); opacity: 0; }
         }
 
         .main-btn {
             background: white;
             color: var(--bg-dark);
             border: none;
-            padding: 15px 40px;
+            padding: 14px 40px;
             border-radius: 30px;
             font-weight: bold;
-            font-size: 1rem;
             cursor: pointer;
             box-shadow: 0 10px 20px rgba(0,0,0,0.3);
-        }
-
-        .loop-status {
-            font-size: 0.75rem;
-            color: var(--primary);
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            font-weight: bold;
+            margin-top: 10px;
         }
 
         .mechanism-box {
             background: rgba(0,0,0,0.3);
             padding: 15px;
             border-radius: 20px;
-            margin-top: 25px;
+            margin-top: 20px;
             font-size: 0.85rem;
             line-height: 1.5;
             color: #cbd5e1;
+            text-align: left;
         }
 
         .back-link {
             margin-top: auto;
             color: #94a3b8;
             font-size: 0.85rem;
-            text-decoration: none;
             cursor: pointer;
+            padding: 10px;
         }
     </style>
 </head>
 <body>
 
 <div class="app-container">
-    <header id="app-header">
-        <h1>SleepTune</h1>
-        <div class="sub-t">ISI 睡眠研究支持</div>
-    </header>
-
-    <div id="selection-page">
-        <div class="card" onclick="selectType('onset')">
+    <div id="selection-page" class="page">
+        <header>
+            <h1>SleepTune</h1>
+            <div class="sub-t">選擇您的專屬睡眠頻率</div>
+        </header>
+        <div class="card" onclick="navigateTo('onset')">
             <span class="card-title">🌙 難以入睡</span>
-            <span class="card-desc">環境太吵或大腦太興奮。推薦：白噪音。</span>
+            <span class="card-desc">腦袋轉不停。推薦：白噪音。</span>
         </div>
-        <div class="card" onclick="selectType('maintenance')">
+        <div class="card" onclick="navigateTo('maintenance')">
             <span class="card-title">⏳ 睡眠淺短</span>
             <span class="card-desc">半夜容易醒來。推薦：粉紅噪音。</span>
         </div>
-        <div class="card" onclick="selectType('🧠 壓力過大')">
-            <span class="card-title">🧠 壓力型失眠</span>
-            <span class="card-desc">身心難以放鬆。推薦：Delta 雙耳節拍。</span>
+        <div class="card" onclick="navigateTo('mixed')">
+            <span class="card-title">🧠 壓力焦慮</span>
+            <span class="card-desc">身心處於高喚醒。推薦：Delta 節拍。</span>
         </div>
     </div>
 
-    <div id="result-area">
-        <div class="loop-status">∞ 正在重複播放</div>
-        <h2 id="sound-name" style="margin: 10px 0 0 0;"></h2>
+    <div id="result-area" class="page hidden">
+        <div style="font-size: 0.75rem; color: var(--primary); letter-spacing: 2px;">LOOPING AUDIO</div>
+        <h2 id="sound-name" style="margin: 10px 0;"></h2>
         
         <div id="visual-container" class="player-visual">
             <div class="pulse"></div>
-            <div class="pulse" style="animation-delay: 1.2s;"></div>
-            <svg id="play-icon" width="50" height="50" viewBox="0 0 24 24" fill="white">
-                <path d="M8 5v14l11-7z"/>
-            </svg>
+            <div class="pulse" style="animation-delay: 1.5s;"></div>
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="white"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
         </div>
 
-        <div class="play-controls">
-            <button class="main-btn" id="toggle-btn" onclick="togglePlay()">暫停播放</button>
-        </div>
+        <button class="main-btn" id="toggle-btn" onclick="togglePlay()">暫停播放</button>
 
         <div class="mechanism-box">
             <span id="mechanism-text"></span>
         </div>
 
-        <audio id="audio-player" loop pre-load="auto">
-            <source id="audio-source" src="" type="audio/mpeg">
-        </audio>
+        <audio id="audio-player" loop></audio>
 
-        <p class="back-link" onclick="reset()">重新評估狀況</p>
+        <p class="back-link" onclick="backToMain()">← 重新選擇狀況</p>
     </div>
 </div>
 
 <script>
     const data = {
-        onset: {
-            name: "白噪音",
-            mechanism: "透過穩定音牆遮蔽突發環境音，縮短入睡潛伏期 (SOL)。",
-            url: "https://downsc.chinaz.net/Files/DownLoad/sound1/202211/y1349.mp3" 
-        },
-        maintenance: {
-            name: "粉紅噪音",
-            mechanism: "增強深度睡眠的慢波活動，減少夜間覺醒次數。",
-            url: "https://www.audiocheck.net/download.php?filename=Audio/audiocheck.net_pinknoise.wav"
-        },
-        mixed: {
-            name: "Delta 雙耳節拍",
-            mechanism: "引導大腦進入 $1$–$4$ Hz 的深度修復頻率，適合高度焦慮者。",
-            url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3"
-        }
+        onset: { name: "白噪音", mechanism: "建立穩定音牆遮蔽噪音，協助快速入睡。", url: "https://downsc.chinaz.net/Files/DownLoad/sound1/202211/y1349.mp3" },
+        maintenance: { name: "粉紅噪音", mechanism: "增強深度睡眠慢波，穩定睡眠結構。", url: "https://www.audiocheck.net/download.php?filename=Audio/audiocheck.net_pinknoise.wav" },
+        mixed: { name: "Delta 雙耳節拍", mechanism: "誘導大腦進入深層修復頻率，適合減壓。", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3" }
     };
 
     const player = document.getElementById('audio-player');
+    const selectPage = document.getElementById('selection-page');
+    const resultPage = document.getElementById('result-area');
     const visual = document.getElementById('visual-container');
-    const toggleBtn = document.getElementById('toggle-btn');
 
-    function selectType(type) {
-        const info = data[type] || data['mixed'];
-        document.getElementById('selection-page').style.display = 'none';
-        document.getElementById('result-area').style.display = 'flex';
-        document.getElementById('sound-name').innerText = info.name;
-        document.getElementById('mechanism-text').innerText = "💡 " + info.mechanism;
+    function navigateTo(type) {
+        const info = data[type];
         
-        document.getElementById('audio-source').src = info.url;
-        player.load();
+        // 1. 啟動第一頁退出動畫
+        selectPage.classList.add('exit');
         
-        // 確保循環播放
-        player.loop = true;
-        
-        player.play().then(() => {
+        // 2. 延遲後更新內容並顯示第二頁
+        setTimeout(() => {
+            selectPage.style.display = 'none';
+            
+            document.getElementById('sound-name').innerText = info.name;
+            document.getElementById('mechanism-text').innerText = "💡 " + info.mechanism;
+            player.src = info.url;
+            player.play();
             visual.classList.add('playing');
-        }).catch(e => {
-            toggleBtn.innerText = "點擊播放";
-            visual.classList.remove('playing');
-        });
+
+            resultPage.style.display = 'flex';
+            // 強制瀏覽器重繪
+            void resultPage.offsetWidth; 
+            resultPage.classList.remove('hidden');
+        }, 400); // 這裡的數值要略小於 CSS transition 時間
+    }
+
+    function backToMain() {
+        resultPage.classList.add('exit');
+        player.pause();
+        
+        setTimeout(() => {
+            resultPage.style.display = 'none';
+            resultPage.classList.remove('exit');
+            resultPage.classList.add('hidden');
+            
+            selectPage.style.display = 'flex';
+            void selectPage.offsetWidth;
+            selectPage.classList.remove('exit');
+        }, 400);
     }
 
     function togglePlay() {
         if (player.paused) {
             player.play();
-            toggleBtn.innerText = "暫停播放";
+            document.getElementById('toggle-btn').innerText = "暫停播放";
             visual.classList.add('playing');
         } else {
             player.pause();
-            toggleBtn.innerText = "繼續播放";
+            document.getElementById('toggle-btn').innerText = "繼續播放";
             visual.classList.remove('playing');
         }
     }
-
-    function reset() {
-        location.reload(); // 最簡單的重置方式
-    }
 </script>
-
 </body>
 </html>
