@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>SleepTune - 專業定時版</title>
+    <title>SleepTune Pro - 臨床專業版</title>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;700&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -15,7 +15,6 @@
         }
 
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        
         body {
             font-family: 'Noto Sans TC', sans-serif;
             background: var(--bg-dark);
@@ -42,7 +41,7 @@
             width: 92%;
             max-width: 450px;
             height: 85svh;
-            max-height: 800px;
+            max-height: 850px;
             background: var(--glass);
             backdrop-filter: blur(30px);
             -webkit-backdrop-filter: blur(30px);
@@ -58,56 +57,45 @@
             flex: 1;
             display: flex;
             flex-direction: column;
-            transition: all 0.5s ease;
             overflow-y: auto;
             scrollbar-width: none;
+            transition: 0.5s ease;
         }
-        .page.hidden { display: none; opacity: 0; }
+        .page::-webkit-scrollbar { display: none; }
+        .hidden { display: none !important; opacity: 0; }
 
-        header { text-align: center; margin-bottom: 20px; }
-        h1 { font-size: 1.6rem; color: var(--primary); margin: 0; }
-        .subtitle { font-size: 0.8rem; color: #94a3b8; margin-top: 5px; }
+        header { text-align: center; margin-bottom: 20px; flex-shrink: 0; }
+        h1 { font-size: 1.5rem; color: var(--primary); margin: 0; }
+        .step-hint { font-size: 0.75rem; color: var(--secondary); margin-top: 5px; text-transform: uppercase; }
 
-        /* 播放器專屬樣式 */
-        .timer-badge {
-            display: inline-block;
-            background: rgba(255, 255, 255, 0.1);
-            padding: 6px 15px;
-            border-radius: 20px;
-            font-size: 0.75rem;
-            margin-bottom: 15px;
-            color: var(--secondary);
-            border: 1px solid var(--secondary);
+        /* 問卷樣式 */
+        .q-group { background: rgba(255,255,255,0.05); padding: 15px; border-radius: 20px; margin-bottom: 12px; }
+        .q-text { font-size: 0.85rem; margin-bottom: 10px; display: block; color: #cbd5e1; }
+        .opt-grid { display: flex; justify-content: space-between; gap: 4px; }
+        .opt-btn {
+            flex: 1; background: rgba(255,255,255,0.1); border: none; color: white;
+            padding: 8px 0; border-radius: 10px; font-size: 0.7rem; cursor: pointer;
         }
-
-        .visualizer {
-            width: 140px; height: 140px; background: linear-gradient(45deg, var(--primary), var(--secondary));
-            border-radius: 50%; margin: 20px auto; position: relative;
-            display: flex; justify-content: center; align-items: center;
-        }
-        .pulse {
-            position: absolute; width: 100%; height: 100%; border-radius: 50%;
-            background: var(--primary); animation: pulse-anim 3s infinite; opacity: 0;
-        }
-
-        .volume-lock-notice {
-            font-size: 0.7rem;
-            color: #94a3b8;
-            background: rgba(0,0,0,0.3);
-            padding: 8px;
-            border-radius: 10px;
-            margin: 10px 0;
-        }
+        .opt-btn.active { background: var(--primary); font-weight: bold; }
 
         .action-btn {
             width: 100%; background: white; color: var(--bg-dark); border: none;
             padding: 16px; border-radius: 20px; font-weight: bold; font-size: 1rem;
-            cursor: pointer;
+            cursor: pointer; margin-top: 10px;
         }
 
-        .mechanism-box {
-            background: rgba(0,0,0,0.25); padding: 15px; border-radius: 20px;
-            text-align: left; margin-top: 15px; font-size: 0.8rem; line-height: 1.5; color: #cbd5e1;
+        /* 播放器 */
+        .timer-info { font-size: 0.8rem; color: var(--secondary); border: 1px solid var(--secondary); padding: 5px 12px; border-radius: 15px; margin-bottom: 15px; display: inline-block; }
+        .visual-circle {
+            width: 130px; height: 130px; background: linear-gradient(45deg, var(--primary), var(--secondary));
+            border-radius: 50%; margin: 25px auto; position: relative;
+            display: flex; justify-content: center; align-items: center;
+        }
+        .pulse { position: absolute; width: 100%; height: 100%; border-radius: 50%; background: var(--primary); animation: pulse-anim 3s infinite; opacity: 0; }
+
+        .prescription-box {
+            background: rgba(0,0,0,0.3); padding: 15px; border-radius: 20px;
+            text-align: left; margin-top: 15px; font-size: 0.8rem; line-height: 1.5;
         }
 
         @keyframes fluidMove { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
@@ -119,94 +107,198 @@
 <div class="fluid-bg"></div>
 
 <div class="app-container">
-    <div id="survey-page" class="page">
-        <header><h1>SleepTune</h1><div class="subtitle">ISI 專業睡眠介入</div></header>
-        <div style="text-align: center; margin-top: 50px;">
-            <p>正在根據您的狀況準備聲音處方...</p>
-            <button class="action-btn" onclick="analyzeSleep()">開始 30min 睡眠療程</button>
-        </div>
+    <div id="isi-page" class="page">
+        <header>
+            <h1>SleepTune</h1>
+            <div class="step-hint">Step 1: ISI 失眠嚴重度評估</div>
+        </header>
+        <div id="isi-questions"></div>
+        <button class="action-btn" onclick="checkISI()">下一步</button>
     </div>
 
-    <div id="player-page" class="page hidden">
+    <div id="psqi-page" class="page hidden">
         <header>
-            <div class="timer-badge" id="timer-display">倒數計時: 30:00</div>
-            <h2 id="sound-title" style="margin: 5px 0;"></h2>
-            <div class="volume-lock-notice">⚠️ 數位輸出已鎖定 65%，請手動調整手機音量至舒適。</div>
+            <h1>睡眠深度診斷</h1>
+            <div class="step-hint">Step 2: PSQI 子維度評估</div>
+        </header>
+        <div class="q-group" data-psqi="latency">
+            <span class="q-text">1. 入睡潛伏期（入睡是否很慢？）</span>
+            <div class="opt-grid">
+                <button class="opt-btn" onclick="setPSQI(this, 0)">正常</button>
+                <button class="opt-btn" onclick="setPSQI(this, 1)">輕微</button>
+                <button class="opt-btn" onclick="setPSQI(this, 2)">中度</button>
+                <button class="opt-btn" onclick="setPSQI(this, 3)">嚴重</button>
+            </div>
+        </div>
+        <div class="q-group" data-psqi="disturbance">
+            <span class="q-text">2. 睡眠干擾（睡眠穩定度不足，如易醒？）</span>
+            <div class="opt-grid">
+                <button class="opt-btn" onclick="setPSQI(this, 2)">輕微</button>
+                <button class="opt-btn" onclick="setPSQI(this, 5)">中度</button>
+                <button class="opt-btn" onclick="setPSQI(this, 8)">嚴重</button>
+                <button class="opt-btn" onclick="setPSQI(this, 10)">極嚴重</button>
+            </div>
+        </div>
+        <div class="q-group" data-psqi="dysfunction">
+            <span class="q-text">3. 日間功能障礙（白天精神極差？）</span>
+            <div class="opt-grid">
+                <button class="opt-btn" onclick="setPSQI(this, 0)">無</button>
+                <button class="opt-btn" onclick="setPSQI(this, 1)">輕微</button>
+                <button class="opt-btn" onclick="setPSQI(this, 2)">中度</button>
+                <button class="opt-btn" onclick="setPSQI(this, 3)">嚴重</button>
+            </div>
+        </div>
+        <button class="action-btn" onclick="generatePrescription()">生成專業處方</button>
+    </div>
+
+    <div id="player-page" class="page hidden" style="text-align: center;">
+        <header>
+            <div class="timer-info" id="timer">倒數計時: 30:00</div>
+            <h2 id="sound-name" style="margin: 5px 0;"></h2>
+            <div style="font-size: 0.7rem; color: #94a3b8;">音量鎖定: 65dB (數位增益 65%)</div>
         </header>
 
-        <div class="visualizer" id="viz">
+        <div class="visual-circle">
             <div class="pulse"></div>
             <div class="pulse" style="animation-delay: 1.5s;"></div>
-            <svg width="35" height="35" viewBox="0 0 24 24" fill="white"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
+            <svg width="30" height="30" viewBox="0 0 24 24" fill="white"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
         </div>
 
         <button class="action-btn" id="play-pause" onclick="toggleAudio()">暫停播放</button>
 
-        <div class="mechanism-box">
-            <strong style="color: var(--primary);">✦ 漸弱機制 (Volume Fading)</strong>
-            <p>音量將在最後 5 分鐘由 65% 線性降至 0%，避免突然停止音訊導致大腦覺醒。</p>
+        <div class="prescription-box">
+            <strong style="color: var(--primary); font-size: 0.85rem;">臨床診斷處方：</strong>
+            <p id="clinical-desc" style="margin-top: 5px;"></p>
+            <hr style="border: 0.5px solid rgba(255,255,255,0.1); margin: 10px 0;">
+            <div id="psqi-adjust" style="font-size: 0.75rem; color: var(--secondary); font-weight: bold;"></div>
         </div>
+        <p onclick="location.reload()" style="color: #94a3b8; font-size: 0.75rem; cursor: pointer; margin-top: 20px;">重新評估</p>
     </div>
 </div>
 
-<audio id="main-audio" loop></audio>
+<audio id="audio-engine" loop></audio>
 
 <script>
-    let timeLeft = 30 * 60; // 30 分鐘
-    const TARGET_VOL = 0.65; // 鎖定數位音量 65%
-    let timerInterval;
+    const isiQuestions = [
+        "入睡困難程度？", "維持睡眠困難？", "早醒問題？", 
+        "對目前睡眠滿意度？", "睡眠問題干擾日常生活？",
+        "他人眼中的睡眠困擾？", "為睡眠問題感到憂慮？"
+    ];
+    let isiTotal = 0;
+    let psqiData = { latency: 0, disturbance: 0, dysfunction: 0 };
+    let baseVolume = 0.65; // 鎖定 65%
 
-    const audio = document.getElementById('main-audio');
+    // 生成 ISI 問題
+    const isiContainer = document.getElementById('isi-questions');
+    isiQuestions.forEach((q, i) => {
+        const div = document.createElement('div');
+        div.className = 'q-group';
+        div.innerHTML = `
+            <span class="q-text">${i+1}. ${q}</span>
+            <div class="opt-grid" data-isi="${i}">
+                <button class="opt-btn" onclick="setISI(this, 0)">0</button>
+                <button class="opt-btn" onclick="setISI(this, 1)">1</button>
+                <button class="opt-btn" onclick="setISI(this, 2)">2</button>
+                <button class="opt-btn" onclick="setISI(this, 3)">3</button>
+                <button class="opt-btn" onclick="setISI(this, 4)">4</button>
+            </div>
+        `;
+        isiContainer.appendChild(div);
+    });
 
-    function analyzeSleep() {
-        // 切換頁面 (簡化邏輯供演示)
-        document.getElementById('survey-page').classList.add('hidden');
-        document.getElementById('player-page').classList.remove('hidden');
-        document.getElementById('sound-title').innerText = "白噪音 (臨床干預)";
-
-        // 初始化音訊
-        audio.src = "https://downsc.chinaz.net/Files/DownLoad/sound1/202211/y1349.mp3";
-        audio.volume = TARGET_VOL;
-        audio.play();
-
-        startTimer();
+    function setISI(btn, score) {
+        const parent = btn.parentElement;
+        parent.querySelectorAll('.opt-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
     }
 
-    function startTimer() {
-        timerInterval = setInterval(() => {
-            timeLeft--;
-            updateTimerDisplay();
+    function setPSQI(btn, score) {
+        const parent = btn.closest('.q-group');
+        const type = parent.getAttribute('data-psqi');
+        parent.querySelectorAll('.opt-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        psqiData[type] = score;
+    }
 
-            // 漸弱機制：最後 5 分鐘 (300 秒)
-            if (timeLeft <= 300 && timeLeft > 0) {
-                audio.volume = (timeLeft / 300) * TARGET_VOL;
+    function checkISI() {
+        const actives = document.querySelectorAll('#isi-questions .opt-btn.active');
+        if (actives.length < 7) { alert("請完成所有 ISI 題目"); return; }
+        
+        isiTotal = Array.from(actives).reduce((sum, btn) => sum + parseInt(btn.innerText), 0);
+        
+        document.getElementById('isi-page').classList.add('hidden');
+        if (isiTotal >= 10) {
+            document.getElementById('psqi-page').classList.remove('hidden');
+        } else {
+            generatePrescription(); // 直接去播放
+        }
+    }
+
+    function generatePrescription() {
+        document.getElementById('psqi-page').classList.add('hidden');
+        document.getElementById('player-page').classList.remove('hidden');
+        
+        let sound = ""; let desc = ""; let psqiDesc = "";
+        let finalVolume = baseVolume;
+
+        // 1. ISI 基礎判定
+        if (isiTotal <= 7) {
+            sound = "舒緩音樂"; desc = "正常：建議一般性放鬆音樂。";
+        } else if (isiTotal <= 14) {
+            sound = "白噪音"; desc = "亞臨床失眠：透過穩定頻率降低入睡門檻。";
+        } else if (isiTotal <= 21) {
+            sound = "粉紅噪音"; desc = "中度臨床失眠：強化慢波活動，穩定睡眠結構。";
+        } else {
+            sound = "雙耳節拍"; desc = "重度臨床失眠：主動腦波引導 (Entrainment) 介入。";
+        }
+
+        // 2. PSQI 子維度微調 (ISI >= 10 時)
+        if (isiTotal >= 10) {
+            if (psqiData.latency >= 3) {
+                finalVolume *= 1.1; // 提升 5-10%
+                psqiDesc += "✦ 入睡潛伏期調整：提升音量 10%，節拍中心設為 6Hz。<br>";
             }
+            if (psqiData.disturbance >= 10) {
+                psqiDesc += "✦ 睡眠干擾調整：開啟整夜播放模式，強化粉紅噪音低頻段。<br>";
+            }
+            if (psqiData.dysfunction >= 3) {
+                psqiDesc += "✦ 日間障礙調整：改採 432Hz + Delta 節拍綜合處方。";
+            }
+        }
 
-            if (timeLeft <= 0) {
+        document.getElementById('sound-name').innerText = sound;
+        document.getElementById('clinical-desc').innerText = desc;
+        document.getElementById('psqi-adjust').innerHTML = psqiDesc;
+        
+        startAudioSession(finalVolume);
+    }
+
+    let timeLeft = 30 * 60;
+    const audio = document.getElementById('audio-engine');
+
+    function startAudioSession(vol) {
+        audio.src = "https://downsc.chinaz.net/Files/DownLoad/sound1/202211/y1349.mp3"; 
+        audio.volume = vol;
+        audio.play();
+        
+        setInterval(() => {
+            if (timeLeft > 0) {
+                timeLeft--;
+                // 最後 5 分鐘漸弱
+                if (timeLeft < 300) audio.volume = (timeLeft/300) * vol;
+                
+                const m = Math.floor(timeLeft/60);
+                const s = timeLeft%60;
+                document.getElementById('timer').innerText = `倒數計時: ${m}:${s.toString().padStart(2,'0')}`;
+            } else {
                 audio.pause();
-                clearInterval(timerInterval);
-                document.getElementById('timer-display').innerText = "療程結束";
             }
         }, 1000);
     }
 
-    function updateTimerDisplay() {
-        const mins = Math.floor(timeLeft / 60);
-        const secs = timeLeft % 60;
-        document.getElementById('timer-display').innerText = 
-            `倒數計時: ${mins}:${secs.toString().padStart(2, '0')}`;
-    }
-
     function toggleAudio() {
-        if (audio.paused) {
-            audio.play();
-            document.getElementById('play-pause').innerText = "暫停播放";
-            document.getElementById('viz').style.opacity = "1";
-        } else {
-            audio.pause();
-            document.getElementById('play-pause').innerText = "繼續播放";
-            document.getElementById('viz').style.opacity = "0.5";
-        }
+        if (audio.paused) { audio.play(); document.getElementById('play-pause').innerText = "暫停播放"; }
+        else { audio.pause(); document.getElementById('play-pause').innerText = "繼續播放"; }
     }
 </script>
 </body>
