@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>SleepTune Pro - 臨床專業版</title>
+    <title>SleepTune Pro - 專業臨床聲音處方</title>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;700&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -16,6 +16,7 @@
         }
 
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        
         body {
             font-family: 'Noto Sans TC', sans-serif;
             background: var(--bg-dark);
@@ -28,7 +29,7 @@
             overflow: hidden;
         }
 
-        /* 動態背景 */
+        /* 動態流體背景 */
         .fluid-bg {
             position: fixed;
             top: 0; left: 0; width: 100vw; height: 100svh;
@@ -56,7 +57,7 @@
             overflow: hidden;
         }
 
-        /* 頁面轉場核心 */
+        /* 頁面切換動畫 */
         .page {
             position: absolute;
             top: 25px; left: 25px; right: 25px; bottom: 25px;
@@ -69,86 +70,50 @@
             transform: translateX(0);
         }
         .page::-webkit-scrollbar { display: none; }
-        
-        .hidden { 
-            opacity: 0 !important; 
-            transform: translateX(50px) !important; 
-            pointer-events: none;
-        }
-
-        /* 退出時的動畫 */
-        .exit {
-            opacity: 0 !important;
-            transform: translateX(-50px) !important;
-        }
+        .hidden { opacity: 0 !important; transform: translateX(50px) !important; pointer-events: none; display: none; }
+        .exit { opacity: 0 !important; transform: translateX(-50px) !important; }
 
         header { text-align: center; margin-bottom: 20px; flex-shrink: 0; }
         h1 { font-size: 1.5rem; color: var(--primary); margin: 0; }
         .step-hint { font-size: 0.75rem; color: var(--secondary); margin-top: 5px; text-transform: uppercase; letter-spacing: 1px; }
 
-        /* 問卷卡片動畫 */
-        .q-group { 
-            background: rgba(255,255,255,0.05); 
-            padding: 15px; 
-            border-radius: 20px; 
-            margin-bottom: 12px;
-            border: 1px solid transparent;
-            transition: border 0.3s ease, background 0.3s ease;
-        }
-        .q-group:focus-within {
-            border-color: var(--primary);
-            background: rgba(255,255,255,0.1);
-        }
-
+        /* 問卷卡片 */
+        .q-group { background: rgba(255,255,255,0.05); padding: 15px; border-radius: 20px; margin-bottom: 12px; }
         .q-text { font-size: 0.85rem; margin-bottom: 10px; display: block; color: #cbd5e1; }
-
-        /* 按鈕互動動畫 */
         .opt-grid { display: flex; justify-content: space-between; gap: 4px; }
         .opt-btn {
             flex: 1; background: rgba(255,255,255,0.1); border: none; color: white;
             padding: 10px 0; border-radius: 12px; font-size: 0.7rem; cursor: pointer;
-            transition: all 0.3s var(--transition-curve);
-            transform: scale(1);
+            transition: all 0.2s ease;
         }
         .opt-btn:active { transform: scale(0.9); }
-        .opt-btn.active { 
-            background: var(--primary); 
-            font-weight: bold; 
-            box-shadow: 0 0 15px var(--primary);
-        }
+        .opt-btn.active { background: var(--primary); font-weight: bold; box-shadow: 0 0 10px var(--primary); }
 
         .action-btn {
             width: 100%; background: white; color: var(--bg-dark); border: none;
             padding: 16px; border-radius: 20px; font-weight: bold; font-size: 1rem;
-            cursor: pointer; margin-top: 10px;
-            transition: all 0.3s var(--transition-curve);
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            cursor: pointer; margin-top: 10px; transition: 0.3s;
         }
-        .action-btn:hover { background: #f8f8f8; transform: translateY(-2px); box-shadow: 0 6px 20px rgba(255,255,255,0.2); }
-        .action-btn:active { transform: translateY(0) scale(0.98); }
+        .action-btn:active { transform: scale(0.98); opacity: 0.9; }
 
-        /* 播放器動畫 */
+        /* 播放器 UI */
         .timer-info { 
             font-size: 0.8rem; color: var(--secondary); border: 1px solid var(--secondary); 
             padding: 5px 12px; border-radius: 15px; margin-bottom: 15px; display: inline-block;
             animation: breathe 2s infinite ease-in-out;
         }
-
         .visual-circle {
             width: 130px; height: 130px; background: linear-gradient(45deg, var(--primary), var(--secondary));
             border-radius: 50%; margin: 25px auto; position: relative;
             display: flex; justify-content: center; align-items: center;
-            box-shadow: 0 0 30px rgba(129, 140, 248, 0.4);
         }
         .pulse { position: absolute; width: 100%; height: 100%; border-radius: 50%; background: var(--primary); animation: pulse-anim 3s infinite; opacity: 0; }
 
-        @keyframes breathe {
-            0%, 100% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.7; transform: scale(0.95); }
-        }
+        .prescription-box { background: rgba(0,0,0,0.3); padding: 15px; border-radius: 20px; text-align: left; margin-top: 15px; font-size: 0.8rem; line-height: 1.5; }
 
         @keyframes fluidMove { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
         @keyframes pulse-anim { 0% { transform: scale(1); opacity: 0.5; } 100% { transform: scale(1.8); opacity: 0; } }
+        @keyframes breathe { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.7; transform: scale(0.95); } }
     </style>
 </head>
 <body>
@@ -156,48 +121,48 @@
 <div class="fluid-bg"></div>
 
 <div class="app-container">
-    <div id="isi-page" class="page">
+    <div id="isi-page" class="page hidden">
         <header>
             <h1>SleepTune</h1>
             <div class="step-hint">Step 1: ISI 失眠嚴重度評估</div>
         </header>
         <div id="isi-questions"></div>
-        <button class="action-btn" onclick="transitionPage('isi-page', checkISI)">下一步</button>
+        <button class="action-btn" onclick="processISI()">下一步</button>
     </div>
 
     <div id="psqi-page" class="page hidden">
         <header>
-            <h1>睡眠深度診斷</h1>
+            <h1>進階深度診斷</h1>
             <div class="step-hint">Step 2: PSQI 子維度評估</div>
         </header>
         <div class="q-group" data-psqi="latency">
             <span class="q-text">1. 入睡潛伏期（入睡是否很慢？）</span>
             <div class="opt-grid">
-                <button class="opt-btn" onclick="setOpt(this, 'latency')">正常</button>
-                <button class="opt-btn" onclick="setOpt(this, 'latency')">輕微</button>
-                <button class="opt-btn" onclick="setOpt(this, 'latency')">中度</button>
-                <button class="opt-btn" onclick="setOpt(this, 'latency', 3)">嚴重</button>
+                <button class="opt-btn" onclick="setPSQI(this, 0)">正常</button>
+                <button class="opt-btn" onclick="setPSQI(this, 1)">輕微</button>
+                <button class="opt-btn" onclick="setPSQI(this, 2)">中度</button>
+                <button class="opt-btn" onclick="setPSQI(this, 3)">嚴重</button>
             </div>
         </div>
         <div class="q-group" data-psqi="disturbance">
-            <span class="q-text">2. 睡眠干擾程度？</span>
+            <span class="q-text">2. 睡眠干擾程度（如半夜易醒）？</span>
             <div class="opt-grid">
-                <button class="opt-btn" onclick="setOpt(this, 'disturbance')">輕微</button>
-                <button class="opt-btn" onclick="setOpt(this, 'disturbance')">中度</button>
-                <button class="opt-btn" onclick="setOpt(this, 'disturbance')">嚴重</button>
-                <button class="opt-btn" onclick="setOpt(this, 'disturbance', 10)">極重</button>
+                <button class="opt-btn" onclick="setPSQI(this, 2)">輕微</button>
+                <button class="opt-btn" onclick="setPSQI(this, 5)">中度</button>
+                <button class="opt-btn" onclick="setPSQI(this, 8)">嚴重</button>
+                <button class="opt-btn" onclick="setPSQI(this, 10)">極重</button>
             </div>
         </div>
         <div class="q-group" data-psqi="dysfunction">
-            <span class="q-text">3. 日間功能障礙程度？</span>
+            <span class="q-text">3. 日間功能障礙（白天精神差）？</span>
             <div class="opt-grid">
-                <button class="opt-btn" onclick="setOpt(this, 'dysfunction')">無</button>
-                <button class="opt-btn" onclick="setOpt(this, 'dysfunction')">輕微</button>
-                <button class="opt-btn" onclick="setOpt(this, 'dysfunction')">中度</button>
-                <button class="opt-btn" onclick="setOpt(this, 'dysfunction', 3)">嚴重</button>
+                <button class="opt-btn" onclick="setPSQI(this, 0)">無</button>
+                <button class="opt-btn" onclick="setPSQI(this, 1)">輕微</button>
+                <button class="opt-btn" onclick="setPSQI(this, 2)">中度</button>
+                <button class="opt-btn" onclick="setPSQI(this, 3)">嚴重</button>
             </div>
         </div>
-        <button class="action-btn" onclick="transitionPage('psqi-page', generatePrescription)">生成專業處方</button>
+        <button class="action-btn" onclick="processPSQI()">生成專業處方</button>
     </div>
 
     <div id="player-page" class="page hidden" style="text-align: center;">
@@ -206,116 +171,164 @@
             <h2 id="sound-name" style="margin: 5px 0;"></h2>
             <div style="font-size: 0.7rem; color: #94a3b8;">數位增益鎖定: 65%</div>
         </header>
-
         <div class="visual-circle">
             <div class="pulse"></div>
             <div class="pulse" style="animation-delay: 1.5s;"></div>
             <svg width="30" height="30" viewBox="0 0 24 24" fill="white"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
         </div>
-
         <button class="action-btn" id="play-pause" onclick="toggleAudio()">暫停播放</button>
-
         <div class="prescription-box">
             <strong style="color: var(--primary); font-size: 0.85rem;">臨床診斷處方：</strong>
             <p id="clinical-desc" style="margin-top: 5px; font-size: 0.8rem;"></p>
-            <div id="psqi-adjust" style="font-size: 0.75rem; color: var(--secondary); margin-top: 8px;"></div>
+            <div id="psqi-adjust" style="font-size: 0.75rem; color: var(--secondary); margin-top: 8px; font-weight: bold;"></div>
         </div>
-        <p onclick="location.reload()" style="color: #94a3b8; font-size: 0.75rem; cursor: pointer; margin-top: 20px;">← 重新評估</p>
+        <p onclick="clearAndReset()" style="color: #94a3b8; font-size: 0.75rem; cursor: pointer; margin-top: 20px;">← 清除紀錄並重測</p>
     </div>
 </div>
 
 <audio id="audio-engine" loop></audio>
 
 <script>
-    const isiQuestions = ["入睡困難？", "維持困難？", "早醒問題？", "滿意度？", "生活干擾？", "他人注意？", "憂慮程度？"];
+    const STORAGE_KEY = 'sleepTune_v2_data';
+    const RESET_INTERVAL = 14 * 24 * 60 * 60 * 1000; // 兩週
+    const isiQuestions = ["入睡困難？", "維持困難？", "早醒問題？", "睡眠滿意度？", "日常干擾？", "他人注意？", "憂慮程度？"];
+    
     let isiTotal = 0;
     let psqiData = { latency: 0, disturbance: 0, dysfunction: 0 };
+    let audio = document.getElementById('audio-engine');
+    let timeLeft = 1800;
+    let timerId = null;
 
-    // 初始化 ISI 問題
-    const isiContainer = document.getElementById('isi-questions');
-    isiQuestions.forEach((q, i) => {
-        const div = document.createElement('div');
-        div.className = 'q-group';
-        div.innerHTML = `<span class="q-text">${i+1}. ${q}</span><div class="opt-grid">` + 
-            [0,1,2,3,4].map(n => `<button class="opt-btn" onclick="setOpt(this, 'isi_${i}', ${n})">${n}</button>`).join('') + `</div>`;
-        isiContainer.appendChild(div);
-    });
+    // 初始化：檢查本機儲存與時間
+    window.onload = function() {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) {
+            const data = JSON.parse(saved);
+            if (new Date().getTime() - data.timestamp < RESET_INTERVAL) {
+                isiTotal = data.isiTotal;
+                psqiData = data.psqiData;
+                navigateTo('player-page', () => startSession(true));
+                return;
+            } else {
+                localStorage.removeItem(STORAGE_KEY);
+            }
+        }
+        renderISI();
+        document.getElementById('isi-page').classList.remove('hidden');
+    };
 
-    function setOpt(btn, group, val) {
+    function renderISI() {
+        const container = document.getElementById('isi-questions');
+        isiQuestions.forEach((q, i) => {
+            const div = document.createElement('div');
+            div.className = 'q-group';
+            div.innerHTML = `<span class="q-text">${i+1}. ${q}</span><div class="opt-grid">` + 
+                [0,1,2,3,4].map(n => `<button class="opt-btn" onclick="setISI(this, ${i}, ${n})">${n}</button>`).join('') + `</div>`;
+            container.appendChild(div);
+        });
+    }
+
+    const isiScores = new Array(7).fill(null);
+    function setISI(btn, idx, val) {
         btn.parentElement.querySelectorAll('.opt-btn').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
-        if(group.startsWith('isi')) { /* ISI logic */ } 
-        else { psqiData[group] = val; }
+        isiScores[idx] = val;
     }
 
-    // 轉場函數：處理動畫邏輯
-    function transitionPage(currentId, nextAction) {
-        const current = document.getElementById(currentId);
-        current.classList.add('exit');
+    function setPSQI(btn, val) {
+        const type = btn.closest('.q-group').dataset.psqi;
+        btn.parentElement.querySelectorAll('.opt-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        psqiData[type] = val;
+    }
+
+    function processISI() {
+        if (isiScores.includes(null)) { alert("請回答所有 ISI 問題"); return; }
+        isiTotal = isiScores.reduce((a, b) => a + b, 0);
         
-        setTimeout(() => {
-            current.classList.add('hidden');
-            current.classList.remove('exit');
-            nextAction();
-        }, 600);
+        const nextId = isiTotal >= 10 ? 'psqi-page' : 'player-page';
+        navigateTo(nextId, () => { if(nextId === 'player-page') startSession(); });
     }
 
-    function checkISI() {
-        const actives = document.querySelectorAll('#isi-questions .opt-btn.active');
-        if (actives.length < 7) { 
-            alert("請完成所有問題"); 
-            location.reload(); // 簡單處理回退
-            return; 
+    function processPSQI() {
+        navigateTo('player-page', () => startSession());
+    }
+
+    function navigateTo(targetId, callback) {
+        const current = document.querySelector('.page:not(.hidden)');
+        if (current) {
+            current.classList.add('exit');
+            setTimeout(() => {
+                current.classList.add('hidden');
+                current.classList.remove('exit');
+                showPage(targetId, callback);
+            }, 600);
+        } else {
+            showPage(targetId, callback);
         }
-        isiTotal = Array.from(actives).reduce((sum, btn) => sum + parseInt(btn.innerText), 0);
-        
-        const nextPageId = isiTotal >= 10 ? 'psqi-page' : 'player-page';
-        const nextPage = document.getElementById(nextPageId);
-        nextPage.classList.remove('hidden');
-        if (nextPageId === 'player-page') startSession();
     }
 
-    function generatePrescription() {
-        document.getElementById('player-page').classList.remove('hidden');
-        startSession();
+    function showPage(id, callback) {
+        const target = document.getElementById(id);
+        target.classList.remove('hidden');
+        if (callback) callback();
     }
 
-    function startSession() {
-        let sound = "白噪音"; let desc = "亞臨床失眠介入"; let psqiDesc = "";
-        if (isiTotal >= 22) sound = "雙耳節拍";
-        else if (isiTotal >= 15) sound = "粉紅噪音";
-        else if (isiTotal <= 7) sound = "舒緩音樂";
+    function startSession(isStored = false) {
+        if (!isStored) {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify({
+                isiTotal, psqiData, timestamp: new Date().getTime()
+            }));
+        }
 
-        if (psqiData.latency >= 3) psqiDesc += "✦ 入睡強化：音量+10% / 6Hz 節拍<br>";
-        if (psqiData.disturbance >= 10) psqiDesc += "✦ 穩定強化：整夜模式開啟<br>";
-        if (psqiData.dysfunction >= 3) psqiDesc += "✦ 功能修復：432Hz 處方載入";
+        let sound = "舒緩音樂"; let desc = "正常：建議一般放鬆模式。"; let psqiDesc = "";
+        let vol = 0.65;
+
+        // ISI 判定
+        if (isiTotal >= 22) { sound = "雙耳節拍"; desc = "重度臨床失眠：主動腦波引導介入。"; }
+        else if (isiTotal >= 15) { sound = "粉紅噪音"; desc = "中度臨床失眠：穩定睡眠結構。"; }
+        else if (isiTotal >= 8) { sound = "白噪音"; desc = "亞臨床失眠：噪音遮蔽與降喚醒。"; }
+
+        // PSQI 微調
+        if (isiTotal >= 10) {
+            if (psqiData.latency >= 3) { vol *= 1.1; psqiDesc += "✦ 入睡強化：音量微升 / 6Hz 節拍<br>"; }
+            if (psqiData.disturbance >= 10) psqiDesc += "✦ 穩定強化：建議整夜播放模式<br>";
+            if (psqiData.dysfunction >= 3) psqiDesc += "✦ 功能修復：432Hz 處方載入";
+        }
 
         document.getElementById('sound-name').innerText = sound;
         document.getElementById('clinical-desc').innerText = desc;
         document.getElementById('psqi-adjust').innerHTML = psqiDesc;
         
-        const audio = document.getElementById('audio-engine');
-        audio.src = "https://downsc.chinaz.net/Files/DownLoad/sound1/202211/y1349.mp3";
-        audio.volume = 0.65;
+        audio.src = "https://downsc.chinaz.net/Files/DownLoad/sound1/202211/y1349.mp3"; 
+        audio.volume = vol;
         audio.play();
-        startTimer();
+        startTimer(vol);
     }
 
-    function startTimer() {
-        let timeLeft = 1800;
-        setInterval(() => {
-            if(timeLeft <= 0) return;
+    function startTimer(maxVol) {
+        if (timerId) clearInterval(timerId);
+        timerId = setInterval(() => {
+            if (timeLeft <= 0) { clearInterval(timerId); audio.pause(); return; }
             timeLeft--;
-            const m = Math.floor(timeLeft/60);
-            const s = timeLeft%60;
-            document.getElementById('timer').innerText = `倒數計時: ${m}:${s.toString().padStart(2,'0')}`;
-            if(timeLeft < 300) document.getElementById('audio-engine').volume = (timeLeft/300) * 0.65;
+            if (timeLeft < 300) audio.volume = (timeLeft / 300) * maxVol; // 漸弱
+            
+            const m = Math.floor(timeLeft / 60);
+            const s = timeLeft % 60;
+            document.getElementById('timer').innerText = `倒數計時: ${m}:${s.toString().padStart(2, '0')}`;
         }, 1000);
     }
 
     function toggleAudio() {
-        const audio = document.getElementById('audio-engine');
-        if (audio.paused) audio.play(); else audio.pause();
+        if (audio.paused) { audio.play(); document.getElementById('play-pause').innerText = "暫停播放"; }
+        else { audio.pause(); document.getElementById('play-pause').innerText = "繼續播放"; }
+    }
+
+    function clearAndReset() {
+        if (confirm("確定要清除紀錄並重新評估嗎？")) {
+            localStorage.removeItem(STORAGE_KEY);
+            location.reload();
+        }
     }
 </script>
 </body>
